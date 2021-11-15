@@ -26,9 +26,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/user', (req, res) => {
+  if (!req.cookies.token) {
+    return res.json({});
+  }
   const payload = jwt.verify(req.cookies.token, secret);
   User.findById(payload.id)
     .then(userInfo => {
+      if (!userInfo) {
+        return res.json({});
+      }
       res.json({id:userInfo._id,email:userInfo.email});
     });
 
@@ -54,6 +60,9 @@ app.post('/login', (req, res) => {
   const {email,password} = req.body;
   User.findOne({email})
     .then(userInfo => {
+      if (!userInfo) {
+        return res.json({});
+      }
       const passOk = bcrypt.compareSync(password, userInfo.password);
       if (passOk) {
         jwt.sign({id:userInfo._id,email},secret, (err,token) => {
